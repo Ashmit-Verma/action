@@ -1,0 +1,29 @@
+name: Joke Action
+
+on:
+ push:
+    types: [opened]
+
+jobs:
+  joke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Generate Joke
+        id: joke
+        run: |
+          jokes=("Why do programmers prefer dark mode? Because the light attracts bugs!"
+          "Why don't programmers like nature? It has too many bugs!"
+          "Why did the programmer go broke? Because he didn't get arrays!")
+          echo "::set-output name=joke::${jokes[$RANDOM % ${#jokes[@]}]}"
+
+      - name: Comment on PR
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Here's a programming joke for you:
+            ${{ steps.joke.outputs.joke }}
