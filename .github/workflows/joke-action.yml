@@ -2,7 +2,8 @@ name: Joke Action
 
 on:
   push:
-    types: [opened]
+    branches:
+     -main
 
 jobs:
   joke:
