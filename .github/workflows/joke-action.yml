@@ -1,7 +1,7 @@
 name: Joke Action
 
 on:
- pull_request:
+  push:
     types: [opened]
 
 jobs:
@@ -12,18 +12,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
       - name: Generate Joke
         id: joke
         run: |
-          jokes=("Why do programmers prefer dark mode? Because the light attracts bugs!"
-          "Why don't programmers like nature? It has too many bugs!"
-          "Why did the programmer go broke? Because he didn't get arrays!")
+          jokes=("Why do programmers prefer dark mode? Because the light attracts bugs!" "Why don't programmers like nature? It has too many bugs!" "Why did the programmer go broke? Because he didn't get arrays!")
           echo "::set-output name=joke::${jokes[$RANDOM % ${#jokes[@]}]}"
 
       - name: Comment on PR
-        uses: peter-evans/create-or-update-comment@v1
+        uses: actions/github-script@v5
         with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            Here's a programming joke for you:
-            ${{ steps.joke.outputs.joke }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const joke = '${{ steps.joke.outputs.joke }}';
+            const { owner, repo } = context.repo;
+            const { number } = context.payload.pull_request;
+            const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+            await octokit.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: number,
+              body: `Here's a programming joke for you:\n\n${joke}`,
+            });
